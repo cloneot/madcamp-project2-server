@@ -6,6 +6,7 @@ const port = 80;
 
 app.use(express.static('public'))
 app.set('view engine', 'ejs')
+app.set('views', path.join(__dirname, '..', 'client', 'views'))
 
 app.listen(port, function () {
 	console.log("Server started");
