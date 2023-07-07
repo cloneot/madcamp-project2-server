@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>방 목록</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        $(function () {
+            var socket = io();
+
+            // 방 참여 버튼 클릭 시 동작
+            $('#room-list').on('click', '.join-button', function () {
+                var roomId = $(this).data('room-id');
+                socket.emit('join', roomId);
+            });
+
+            // 방 생성 버튼 클릭 시 동작
+            $('#create-button').click(function () {
+                var roomName = prompt('새로운 방 이름을 입력하세요:');
+                if (roomName) {
+                    socket.emit('create', roomName);
+                }
+            });
+
+            // 방 참여 완료 시 동작
+            socket.on('joined', function (roomName) {
+                alert('방에 참여하였습니다: ' + roomName);
+            });
+
+            // 방이 존재하지 않을 때 에러 메시지 처리
+            socket.on('joinError', function (message) {
+                alert('에러: ' + message);
+            });
+
+            // 방 생성 완료 시 동작
+            socket.on('created', function (room) {
+                alert('새로운 방이 생성되었습니다: ' + room.name);
+            });
+
+            // 새로운 방이 생성되었을 때 목록에 추가
+            socket.on('roomCreated', function (room) {
+                $('#room-list').append('<li>' + room.name + ' <button class="join-button" data-room-id="' + room.id + '">참여하기</button></li>');
+            });
+
+            // 새로운 참여자가 있을 때 목록 갱신
+            socket.on('userJoined', function () {
+                alert('새로운 참여자가 있습니다.');
+            });
+        });
+    </script>
+</head>
+
+<body>
+    <h1>방 목록</h1>
+
+    <ul id="room-list">
+        <% rooms.forEach(function(room) { %>
+            <li>
+                <%= room.name %> <button class="join-button" data-room-id="<%= room.id %>">참여하기</button>
+            </li>
+            <% }); %>
+    </ul>
+
+    <button id="create-button">방 생성하기</button>
+
+</body>
+
+</html>
