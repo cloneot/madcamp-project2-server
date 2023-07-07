@@ -9,8 +9,9 @@ const connection = require('./db')
 const port = 80
 
 app.set('view engine', 'ejs')
-app.set('views', path.join(__dirname, '..', 'client', 'views'))
-app.use(express.static('public'))
+app.set('views', './views')
+// app.set('views', path.join(__dirname, '..', 'client', 'views'))
+app.use(express.static('./public'))
 
 app.use(session({
 	secret: 'secret',
@@ -27,7 +28,6 @@ const io = require('socket.io')(3000, {
 
 //방 목록
 const rooms = [];
-const port = 80;
 
 //클라이언트가 연결됨
 io.on('connection', function (socket) {
@@ -64,13 +64,6 @@ app.get('/test', (req, res) => {
 		res.render('test', {rows: rows})
 	})
 })
-
-	// if not logged in
-	// redirect login
-
-	// if logged in
-	res.render('index', { title: 'Home', message: 'Hey' });
-});
 
 app.get('/login', (req, res) => {
 	res.render('login');
@@ -128,9 +121,8 @@ app.route('/login')
 		}
 	})
 
-app.post('/logout', (req, res) => {
+app.get('/logout', (req, res) => {
 	req.sessionId = false
-
 })
 
 app.listen(port, function () {
