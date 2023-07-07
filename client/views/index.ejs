@@ -8,6 +8,10 @@
 			<h2><%= i+1 %>번</h1>
 		<% } %>
 
-		<a href="./login">로그인</a>
+		<% if(session.loggedIn) { %>
+			<a href=".logout">로그아웃</a>
+		<% } else { %>
+			<a href="./login">로그인</a>
+		<% } %>
 	</body>
 </html>
