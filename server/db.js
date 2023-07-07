@@ -10,21 +10,4 @@ const connection = mysql.createConnection({
 	database: 'testdb'
 })
 
-
-function getAllMemos(callback) {
-	connection.query('SELECT * FROM users', (err, rows, fields) => {
-		if(err)	throw err
-		callback(rows)
-	})
-}
-
-// connection.connect()
-// connection.query('SELECT * from Users', (err, rows, fileds) => {
-// 	if(err)	throw err;
-// 	console.log('User info is: ', rows)
-// })
-// connection.end()
-
-module.exports = {
-	getAllMemos
-}
+module.exports = connection;
