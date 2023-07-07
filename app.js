@@ -5,12 +5,15 @@ const app = express();
 const port = 80;
 
 app.use(express.static('public'))
+app.set('view engine', 'ejs')
 
 app.listen(port, function () {
 	console.log("Server started");
 });
 
 app.get('/', (req, res) => {
-	const filePath = path.join(__dirname, 'views', 'index.html');
-	res.sendFile(filePath);
+	console.log("asdf")
+	// const filePath = path.join(__dirname, 'views', 'index.html');
+	// res.sendFile(filePath);
+	res.render('index', { title: 'Hey', message: 'Hello there!'})
 });
