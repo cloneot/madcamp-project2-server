@@ -2,8 +2,11 @@
 
 
 ```
+/server에서
+
 npm update
 npm install
+npm start
 ```
 
 - public: 정적 파일(이미지, CSS 파일, JavaScript 파일 등)을 저장하는 폴더입니다. 클라이언트 측에서 접근 가능한 파일들을 이곳에 배치합니다.
