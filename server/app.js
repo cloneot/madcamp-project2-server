@@ -1,18 +1,20 @@
-const express = require('express');
-const path = require('path');
+const express = require('express')
+const path = require('path')
+const db = require('./db')
 
-const app = express();
-const port = 80;
-
-console.log("start")
+const app = express()
+const port = 80
 
 app.use(express.static('public'))
 app.set('view engine', 'ejs')
 app.set('views', path.join(__dirname, '..', 'client', 'views'))
 
-app.listen(port, function () {
-	console.log("Server started");
-});
+app.get('/test', (req, res) => {
+	db.getAllMemos((rows) => {
+		console.log('wowwow!!')
+		res.render('test', {rows: rows})
+	})
+})
 
 app.get('/', (req, res) => {
 	// if not logged in
@@ -25,3 +27,7 @@ app.get('/', (req, res) => {
 app.get('/login', (req, res) => {
 	res.render('login')
 })
+
+app.listen(port, function () {
+	console.log("Server started");
+});
