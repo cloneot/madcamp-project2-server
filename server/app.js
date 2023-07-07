@@ -1,8 +1,24 @@
-const express = require('express');
-const app = express();
-const path = require('path');
+const express = require('express')
+const path = require('path')
+const session = require('express-session')
+const app = express()
 const http = require('http').Server(app);
+const bodyParser = require('body-parser')
+const connection = require('./db')
 
+const port = 80
+
+app.set('view engine', 'ejs')
+app.set('views', path.join(__dirname, '..', 'client', 'views'))
+app.use(express.static('public'))
+
+app.use(session({
+	secret: 'secret',
+	resave: true,
+	saveUninitialized: true
+}))
+app.use(bodyParser.urlencoded({ extended: true }))
+app.use(bodyParser.json())
 const io = require('socket.io')(3000, {
 	cors: {
 		origin: '*'
@@ -42,17 +58,13 @@ io.on('connection', function (socket) {
 	});
 });
 
-//정적 파일을 제공하기 위해 express에 미들웨어 추가
-app.use(express.static(path.join(__dirname, '..', 'client', 'public')));
+app.get('/test', (req, res) => {
+	db.getAllMemos((rows) => {
+		console.log('wowwow!!')
+		res.render('test', {rows: rows})
+	})
+})
 
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, '..', 'client', 'views'));
-
-app.listen(port, function () {
-	console.log("Server started");
-});
-
-app.get('/', (req, res) => {
 	// if not logged in
 	// redirect login
 
@@ -79,3 +91,48 @@ app.get('/main/join-room', (req, res) => {
 app.get('/main/create-room', (req, res) => {
 	res.sendFile(path.join(__dirname, '..', 'client', 'public', 'html', 'createPage.html'));
 });
+app.get('/', (req, res) => {
+	if(!req.session.loggedIn) {
+		console.log('please login!')
+		return res.redirect('./login')
+	}
+	res.render('index', {title: 'Home', message: 'Hey', session: req.session})
+});
+
+app.route('/login')
+	.get((req, res) => {
+		res.render('login')
+	})
+	.post((req, res) => {
+		let username = req.body.username
+		let password = req.body.password
+		if(username && password) {
+			connection.query('SELECT * FROM users WHERE username = ? AND password = ?', [username, password], function(error, results, fields) {
+				console.log(results)
+				if (error) throw error
+				if (results.length > 0) {
+					req.session.loggedIn = true
+					req.session.username = username
+					console.log('what?')
+					res.redirect('/')
+					res.end()
+				} else {
+					res.send('Incorrect Username and/or Password!')
+					res.end()
+				}
+			})
+		}
+		else {
+			res.send('empty field exists!')
+			res.end()
+		}
+	})
+
+app.post('/logout', (req, res) => {
+	req.sessionId = false
+
+})
+
+app.listen(port, function () {
+	console.log("Server started")
+})
