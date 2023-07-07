@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>현재 시각</title>
+    <script>
+        function displayCurrentTime() {
+            var now = new Date();
+            var timeString = now.toLocaleTimeString();
+            document.getElementById("current-time").innerHTML = "현재 시각: " + timeString;
+        }
+        window.onload = function () {
+            displayCurrentTime();
+        };
+    </script>
+</head>
+
+<body>
+    <h1>현재 시각 표시</h1>
+    <div id="current-time"></div>
+</body>
+
+</html>
