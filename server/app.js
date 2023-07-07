@@ -6,14 +6,20 @@ const port = 80;
 
 app.use(express.static('public'))
 app.set('view engine', 'ejs')
+app.set('views', path.join(__dirname, '..', 'client', 'views'))
 
 app.listen(port, function () {
 	console.log("Server started");
 });
 
 app.get('/', (req, res) => {
-	console.log("asdf")
-	// const filePath = path.join(__dirname, 'views', 'index.html');
-	// res.sendFile(filePath);
-	res.render('index', { title: 'Hey', message: 'Hello there!'})
+	// if not logged in
+	// redirect login
+
+	// if logged in
+	res.render('index', {title: 'Home', message: 'Hey'})
 });
+
+app.get('/login', (req, res) => {
+	res.render('login')
+})
