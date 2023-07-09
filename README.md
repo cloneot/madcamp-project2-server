@@ -1,4 +1,4 @@
-# madcamp_project2
+# madcamp-project2-server
 
 
 ```
