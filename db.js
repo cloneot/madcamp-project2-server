@@ -1,4 +1,4 @@
-const mysql = require('mysql')
+const mysql = require('mysql');
 
 const connection = mysql.createConnection({
 	// host: '172.10.5.113',
@@ -8,6 +8,6 @@ const connection = mysql.createConnection({
 	password: 'madcamp',
 	port: 3306,
 	database: 'testdb'
-})
+});
 
 module.exports = connection;

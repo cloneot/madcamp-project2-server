@@ -9,6 +9,7 @@ CREATE TABLE users (
 	`email` VARCHAR(255)
 );
 
+INSERT INTO users (username, email, password) VALUES ('test', 'test', 'test');
 INSERT INTO users (username, email, password) VALUES ('kimjunseo', 'junseo.kim@gmail.com', 'password1');
 INSERT INTO users (username, email, password) VALUES ('cloneot', 'cloneot@gmail.com', 'password2');
 
