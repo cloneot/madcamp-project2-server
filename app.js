@@ -3,6 +3,7 @@ const path = require('path')
 const session = require('express-session')
 const app = express()
 const http = require('http').Server(app);
+const cors = require('cors');
 
 const AuthRouter = require('./routes/auth')
 const UserRouter = require('./routes/users')
@@ -12,6 +13,9 @@ const port = 80
 app.set('view engine', 'ejs')
 app.set('views', path.join(__dirname, 'views'))
 
+app.use(cors({
+	origin: ["http://localhost:59949"]
+}));
 app.use(express.static('./public'))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))

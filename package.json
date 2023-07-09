@@ -6,6 +6,7 @@
   },
   "dependencies": {
     "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
     "ejs": "^3.1.9",
     "express": "^4.18.2",
     "express-session": "^1.17.3",
@@ -15,6 +16,6 @@
     "socket.io-client": "^4.7.1"
   },
   "repository": {
-    "url": "https://github.com/cloneot/madcamp_project2.git"
+    "url": "https://github.com/cloneot/madcamp-project2-server.git"
   }
 }
