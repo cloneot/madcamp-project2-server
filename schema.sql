@@ -4,7 +4,7 @@ USE testdb;
 
 CREATE TABLE users (
 	`id` BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-	`username` VARCHAR(255) UNIQUE,
+	`username` VARCHAR(255),
 	`description` VARCHAR(255) DEFAULT '',
 	`total_games` INT DEFAULT 0,
 	`wins` INT DEFAULT 0,
