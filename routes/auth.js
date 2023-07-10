@@ -1,6 +1,11 @@
 const router = require('express').Router();
 const connection = require('../db');
 
+router.post('/oauth', (req, res) => {
+	console.log(req);
+	res.send('oauth post accpet');
+});
+
 router.route('/login')
 	.get((req, res) => {
 		if(req.session.loggedIn === true) {
