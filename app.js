@@ -42,10 +42,9 @@ app.get('/', (req, res) => {
 
 //방 목록
 var rooms = [
-	{ id: '1', name: 'Room 1', owner: 'mingyu', space: '3', player2: '', player3: '', player4: '' }
+	{ id: '1', name: 'Room 1', owner: 'mingyu', target: 1, space: '3', player2: '', player3: '', player4: '' }
 ];
-var roomAnswerMap = new Map();
-roomAnswerMap.set('1', 100);
+var roomTargetMap = new Map();
 
 //클라이언트가 연결됨
 io.on('connection', function (socket) {
@@ -55,45 +54,41 @@ io.on('connection', function (socket) {
 	});
 
 	//클라이언트가 채팅 내용 emit
-	socket.on('enterChat', function (chat, room) {
-		const roomIdValid = rooms.find(r => r.id == room.id);
-		const roomNameValid = rooms.find(r => r.name == room.name);
-		if (!roomIdValid || !roomNameValid) {
+	socket.on('enterChat', function (data) {
+		console.log("enterChat");
+		const room = rooms.find(r => r.id == data.room.id);
+		if (!room || room.name != data['room'].name) {
 			socket.emit('roomDataError', '방이 존재하지 않습니다.');
+			console.log("roomDataError");
 			return;
 		}
-		if (roomAnswerMap.get(room.id) == transformChat2Int(chat)) {
+		if (roomTargetMap.get(room.id) == transformChat2Int(data.chat)) {
 			//정답 맞춤
-			socket.emit('youWin');
+			io.to(room.id).emit('someoneWin', data.myNickName);
+			console.log("someoneWin");
+			return;
 		}
-		//정답 틀림
-		//정답 틀림
-		//정답 틀림
-		//정답 틀림
-		//정답 틀림
-		//정답 틀림
-		//const difference = roomAnswerMap.get(room.id) - transformChat2Int(chat);
-		//socket.emit('wrongAnswer', difference, chat);
-		//정답 틀림
-		//정답 틀림
-		//정답 틀림
-		//정답 틀림
-		//정답 틀림
-		//정답 틀림
+		const difference = roomTargetMap.get(room.id) - transformChat2Int(data.chat);
+		var sendData = { 'difference': difference, 'chat': data.chat, 'myNickName': data.myNickName };
+		io.to(room.id).emit('wrongAnswer', sendData);
+		console.log("wrongAnswer");
 
 	})
 
 	//클라이언트가 roomdId로 참여 요청을
 	socket.on('joinRoom', function (data) {
+
 		console.log('emit joinRoom');
 		//roomId가 존재하는지 확인
 		const room = rooms.find(r => r.id == data.roomId);
 		if (!room) {
 			socket.emit('wrongRoomId', '방이 존재하지 않습니다.');
+			console.log("wrongRoomId");
 			return;
 		}
 		if (room.space == 0) {
 			socket.emit('noRoomSpace', '방이 다 찼습니다.');
+			console.log("noRoomSpace");
 			return;
 		}
 		if (room.space == 3) {
@@ -107,6 +102,7 @@ io.on('connection', function (socket) {
 		}
 		room.space = room.space - 1;
 		socket.emit("joinThisRoom", room);
+		console.log("joinThisRoom");
 		//방 전체에 참여자 알림
 		io.to(room.id).emit("newPlayer", data.nickName);
 		//클라이언트 소켓을 해당 방에 연결
@@ -115,22 +111,41 @@ io.on('connection', function (socket) {
 
 	//클라이언트가 새로운 방 생성 요청
 	socket.on('createRoom', function (data) {
+		const max = 300;
+		const min = 30;
+		var id = Date.now().toString();
+		var target = Math.floor(Math.random() * (max - min)) + min;
+		roomTargetMap.set(id, target);
 		console.log('on createRoom');
 		const newRoom = {
-			id: Date.now().toString(),
+			id: id,
 			name: data.roomName,
 			owner: data.nickName,
-			place: '3',
+			target: target,
+			space: 3,
 			player2: '',
 			player3: '',
 			player4: '',
 		};
 		rooms.push(newRoom);
-		//socket.join(newRoom.id);
+		socket.join(newRoom.id);
 		socket.emit('createRoomSuccess', newRoom);
 		// console.log(`createRoomSucess new rooms: ${rooms}`);
 		socket.broadcast.emit('getRoomListSuccess', rooms);
 		console.log('emit createRoomSuccess')
+	});
+
+	//클라이언트가 게임 시작 요청
+	socket.on('gameStart', (data) => {
+		console.log('gameStart');
+		const room = rooms.find(r => r.id == data.roomId);
+		if (room.owner == data.nickName) {
+			io.to(room.id).emit('gameStartAllow');
+			console.log('gameStartAllow');
+			return;
+		}
+		socket.emit('youAreNotOwner');
+		console.log('youAreNotOwner');
 	});
 
 	socket.on('getRoomList', function(data) {
@@ -167,8 +182,14 @@ httpServer.listen(port, function () {
 
 function transformChat2Int(chat) {
 	var sum = 0;
-	for (var i = 0; i < chat.length; i++) {
-		sum += chat[i];
+	var i;
+	for (i = 0; i < chat.length; i++) {
+		const num = chat.charCodeAt(i);
+		if (num > 96) {
+			sum += num - 96;
+			continue;
+		}
+		sum += num - 64;
 	}
 	return sum;
 }
