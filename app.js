@@ -45,6 +45,7 @@ var rooms = [
 	{ id: '1', name: 'Room 1', owner: 'mingyu', target: 1, space: 3, player2: '', player3: '', player4: '' }
 ];
 var roomTargetMap = new Map();
+var roomCloestMap = new Map();
 
 //클라이언트가 연결됨
 io.on('connection', function (socket) {
@@ -66,9 +67,13 @@ io.on('connection', function (socket) {
 			//정답 맞춤
 			io.to(room.id).emit('someoneWin', data.myNickName);
 			console.log("someoneWin");
+			roomCloestMap.delete(room.id);
 			return;
 		}
-		const difference = roomTargetMap.get(room.id) - transformChat2Int(data.chat);
+		const difference = Math.abs(roomTargetMap.get(room.id) - transformChat2Int(data.chat));
+		if (roomCloestMap.get(room.id).score > difference) {
+			roomCloestMap.set(room.id, { 'nickName': data.myNickName, 'score': difference });
+		}
 		var sendData = { 'difference': difference, 'chat': data.chat, 'myNickName': data.myNickName };
 		io.to(room.id).emit('wrongAnswer', sendData);
 		console.log("wrongAnswer");
@@ -116,11 +121,12 @@ io.on('connection', function (socket) {
 
 	//클라이언트가 새로운 방 생성 요청
 	socket.on('createRoom', function (data) {
-		const max = 300;
+		const max = 500;
 		const min = 30;
 		var id = Date.now().toString();
 		var target = Math.floor(Math.random() * (max - min)) + min;
 		roomTargetMap.set(id, target);
+		roomCloestMap.set(id, { 'nickName': data.nickName, 'score': 1000 });
 		console.log('on createRoom');
 		const newRoom = {
 			id: id,
@@ -140,6 +146,13 @@ io.on('connection', function (socket) {
 		console.log('emit createRoomSuccess')
 	});
 
+	//방장이 timeOver 알림
+	socket.on('timeOver', (data) => {
+		const winnerData = roomCloestMap.get(data.id);
+		io.to(data.id).emit('timeOverFromServer', winnerData);
+		console.log('timeOverFromServer',);
+	});
+
 	//클라이언트가 게임 시작 요청
 	socket.on('gameStart', (data) => {
 		console.log('gameStart');
@@ -147,13 +160,15 @@ io.on('connection', function (socket) {
 		if (room.owner == data.nickName) {
 			io.to(room.id).emit('gameStartAllow');
 			console.log('gameStartAllow');
+			socket.emit("timerStart");
+			console.log('timerStart');
 			return;
 		}
 		socket.emit('youAreNotOwner');
 		console.log('youAreNotOwner');
 	});
 
-	socket.on('getRoomList', function(data) {
+	socket.on('getRoomList', function (data) {
 		console.log(`emit getRoomListSuccess ${rooms.toString()}`);
 		socket.emit('getRoomListSuccess', rooms);
 	});
