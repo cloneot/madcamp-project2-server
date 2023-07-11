@@ -1,13 +1,23 @@
 const router = require('express').Router();
 const connection = require('../db');
 
-router.get('/test', (req, res) => {
-	// console.log(req);
-	return res.json([{id: 17, username: "junseo"}]);
+router.put('/users/:userid/game_end', (req, res) => {
+	console.log('put /users/:userid/game_end');
+	try {
+		var userid = Number(req.params.userid);
+		var is_win = Boolean(req.body.is_win);
+		connection.query('UPDATE users SET wins=wins+?, total_games=total_games+1 WHERE id=?', [is_win ? 1 : 0, userid], (err, results, fields) => {
+			if(err)	throw err;
+			console.log('update wins, total_games');
+			return res.json([{'msg' : 'success'}]);
+		});
+	} catch(e) {
+		console.log(`error: ${e}`);
+	}
 });
 
-router.route('/users/:userid')
-	.get((req, res) => {
+router.get('/users/:userid', (req, res) => {
+		console.log('get /users/:userid get request');
 		let userid = req.params.userid;
 		console.log(userid);
 		// console.log(req);
@@ -22,7 +32,8 @@ router.route('/users/:userid')
 			}
 		});
 	})
-	.put((req, res) => {
+
+router.put('/users/:userid', (req, res) => {
 		console.log('/users/:userid put request!!!');
 		try {
 			var userid = Number(req.params.userid);
