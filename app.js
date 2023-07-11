@@ -75,7 +75,7 @@ io.on('connection', function (socket) {
 
 	})
 
-	//클라이언트가 roomdId로 참여 요청을 
+	//클라이언트가 roomdId로 참여 요청을
 	socket.on('joinRoom', function (data) {
 		console.log('joinRoom');
 		//roomId가 존재하는지 확인
@@ -144,6 +144,16 @@ io.on('connection', function (socket) {
 		}
 		socket.emit('youAreNotOwner');
 		console.log('youAreNotOwner');
+	});
+
+	socket.on('getRoomList', function(data) {
+		console.log(`emit getRoomListSuccess ${rooms.toString()}`);
+		console.log('---');
+		for (var room of rooms) {
+			console.log(room['id'], room['name'], room['owner']);
+		}
+		console.log('---');
+		socket.emit('getRoomListSuccess', rooms);
 	});
 });
 
