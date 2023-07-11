@@ -11,7 +11,7 @@ router.route('/users/:userid')
 		let userid = req.params.userid;
 		console.log(userid);
 		// console.log(req);
-		connection.query('SELECT * FROM users WHERE userid = ?', [id], function(error, results, fields) {
+		connection.query('SELECT * FROM users WHERE id = ?', [userid], function(error, results, fields) {
 			console.log(results);
 			if(error)	throw error;
 			if(results.length > 0) {
@@ -35,13 +35,14 @@ router.route('/users/:userid')
 		connection.query('SELECT * FROM users WHERE id = ?', [userid], function(error, results, fields) {
 			if(error)	throw error;
 			if(results.length > 0) {
-				return;
+				console.log('already exists!');
+				return res.json([{'msg' : 'success'}]);
 			}
 			connection.query('INSERT INTO users (id, username) VALUES (?, ?)', [userid, username], function(error, results, fields) {
 				if(error)	throw error;
+				console.log('insert!');
 				return res.json([{'msg' : 'success'}]);
 			});
-			return res.json([{'msg' : 'success'}]);
 		});
 	});
 
