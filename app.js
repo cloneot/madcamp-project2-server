@@ -85,6 +85,7 @@ io.on('connection', function (socket) {
 
 	//클라이언트가 roomdId로 참여 요청을
 	socket.on('joinRoom', function (data) {
+		console.log('emit joinRoom');
 		//roomId가 존재하는지 확인
 		const room = rooms.find(r => r.id == data.roomId);
 		if (!room) {
@@ -107,7 +108,7 @@ io.on('connection', function (socket) {
 		room.space = room.space - 1;
 		socket.emit("joinThisRoom", room);
 		//방 전체에 참여자 알림
-		socket.to(room.id).emit("newPlayer", nickName);
+		io.to(room.id).emit("newPlayer", data.nickName);
 		//클라이언트 소켓을 해당 방에 연결
 		socket.join(room.id);
 	});
@@ -128,17 +129,12 @@ io.on('connection', function (socket) {
 		//socket.join(newRoom.id);
 		socket.emit('createRoomSuccess', newRoom);
 		// console.log(`createRoomSucess new rooms: ${rooms}`);
-		// socket.emit('getRoomListSuccess', rooms);
+		socket.broadcast.emit('getRoomListSuccess', rooms);
 		console.log('emit createRoomSuccess')
 	});
 
 	socket.on('getRoomList', function(data) {
 		console.log(`emit getRoomListSuccess ${rooms.toString()}`);
-		console.log('---');
-		for (var room of rooms) {
-			console.log(room['id'], room['name'], room['owner']);
-		}
-		console.log('---');
 		socket.emit('getRoomListSuccess', rooms);
 	});
 });
