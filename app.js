@@ -1,3 +1,4 @@
+const axios = require("axios");
 const express = require("express");
 const { createServer } = require("http");
 const { Server } = require("socket.io");
@@ -57,27 +58,33 @@ io.on('connection', function (socket) {
 	//클라이언트가 채팅 내용 emit
 	socket.on('enterChat', function (data) {
 		console.log("enterChat");
-		const room = rooms.find(r => r.id == data.room.id);
-		if (!room || room.name != data['room'].name) {
-			socket.emit('roomDataError', '방이 존재하지 않습니다.');
-			console.log("roomDataError");
+		axios.get(`https://api.dictionaryapi.dev/api/v2/entries/en/${data.chat}`).then(response => {
+			console.log('WORD EXIST!!');
+			const room = rooms.find(r => r.id == data.room.id);
+			if (!room || room.name != data['room'].name) {
+				socket.emit('roomDataError', '방이 존재하지 않습니다.');
+				console.log("roomDataError");
+				return;
+			}
+			if (roomTargetMap.get(room.id) == transformChat2Int(data.chat)) {
+				//정답 맞춤
+				io.to(room.id).emit('someoneWin', data.myNickName);
+				console.log("someoneWin");
+				roomCloestMap.delete(room.id);
+				return;
+			}
+			const difference = Math.abs(roomTargetMap.get(room.id) - transformChat2Int(data.chat));
+			if (roomCloestMap.get(room.id).score > difference) {
+				roomCloestMap.set(room.id, { 'nickName': data.myNickName, 'score': difference });
+			}
+			var sendData = { 'difference': difference, 'chat': data.chat, 'myNickName': data.myNickName };
+			io.to(room.id).emit('wrongAnswer', sendData);
+			console.log("wrongAnswer");
+		}).catch(error => {
+			socket.emit('noSuchWord', data.chat);
+			console.log('NO SUCH WORD!!');
 			return;
-		}
-		if (roomTargetMap.get(room.id) == transformChat2Int(data.chat)) {
-			//정답 맞춤
-			io.to(room.id).emit('someoneWin', data.myNickName);
-			console.log("someoneWin");
-			roomCloestMap.delete(room.id);
-			return;
-		}
-		const difference = Math.abs(roomTargetMap.get(room.id) - transformChat2Int(data.chat));
-		if (roomCloestMap.get(room.id).score > difference) {
-			roomCloestMap.set(room.id, { 'nickName': data.myNickName, 'score': difference });
-		}
-		var sendData = { 'difference': difference, 'chat': data.chat, 'myNickName': data.myNickName };
-		io.to(room.id).emit('wrongAnswer', sendData);
-		console.log("wrongAnswer");
-
+		});
 	})
 
 	//클라이언트가 roomdId로 참여 요청을
