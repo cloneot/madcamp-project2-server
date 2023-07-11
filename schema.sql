@@ -4,12 +4,10 @@ USE testdb;
 
 CREATE TABLE users (
 	`id` BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-	`username` VARCHAR(255),
+	`username` VARCHAR(255) UNIQUE,
 	`description` VARCHAR(255) DEFAULT '',
-	`total_games` INT DEFAULT 0,
 	`wins` INT DEFAULT 0,
-	`losses` INT DEFAULT 0,
-	`draws` INT DEFAULT 0
+	`total_games` INT DEFAULT 0
 );
 	-- `password` VARCHAR(255),
 	-- `email` VARCHAR(255)
