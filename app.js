@@ -42,7 +42,7 @@ app.get('/', (req, res) => {
 
 //방 목록
 var rooms = [
-	{ id: '1', name: 'Room 1', owner: 'mingyu', target: 1, space: '3', player2: '', player3: '', player4: '' }
+	{ id: '1', name: 'Room 1', owner: 'mingyu', target: 1, space: 3, player2: '', player3: '', player4: '' }
 ];
 var roomTargetMap = new Map();
 
@@ -92,21 +92,26 @@ io.on('connection', function (socket) {
 			return;
 		}
 		if (room.space == 3) {
-			room.player2 == data.nickName;
+			room.player2 = data.nickName;
 		}
 		if (room.space == 2) {
-			room.player3 == data.nickName;
+			room.player3 = data.nickName;
 		}
 		if (room.space == 1) {
-			room.player4 == data.nickName;
+			room.player4 = data.nickName;
 		}
 		room.space = room.space - 1;
+
+		console.log(socket.rooms);
+		socket.join(data.roomId);
+		console.log(socket.rooms);
+		socket.broadcast.to(room.id).emit("newPlayer", data.nickName);
+
+		// console.log(`join ${room.id}`);
+
 		socket.emit("joinThisRoom", room);
-		console.log("joinThisRoom");
 		//방 전체에 참여자 알림
-		io.to(room.id).emit("newPlayer", data.nickName);
 		//클라이언트 소켓을 해당 방에 연결
-		socket.join(room.id);
 	});
 
 	//클라이언트가 새로운 방 생성 요청
