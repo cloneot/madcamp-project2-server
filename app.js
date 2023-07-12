@@ -87,6 +87,11 @@ io.on('connection', function (socket) {
 		});
 	})
 
+	//클라이언트가 방 나감
+	socket.on('leaveRoom', function (room) {
+		socket.leave(room.id);
+	});
+
 	//클라이언트가 roomdId로 참여 요청을
 	socket.on('joinRoom', function (data) {
 
@@ -128,10 +133,8 @@ io.on('connection', function (socket) {
 
 	//클라이언트가 새로운 방 생성 요청
 	socket.on('createRoom', function (data) {
-		const max = 500;
-		const min = 30;
 		var id = Date.now().toString();
-		var target = Math.floor(Math.random() * (max - min)) + min;
+		const target = createRandomInt();
 		roomTargetMap.set(id, target);
 		roomCloestMap.set(id, { 'nickName': data.nickName, 'score': 1000 });
 		console.log('on createRoom');
@@ -165,10 +168,10 @@ io.on('connection', function (socket) {
 		console.log('gameStart');
 		const room = rooms.find(r => r.id == data.roomId);
 		if (room.owner == data.nickName) {
-			io.to(room.id).emit('gameStartAllow');
-			console.log('gameStartAllow');
 			socket.emit("timerStart");
 			console.log('timerStart');
+			io.to(room.id).emit('gameStartAllow');
+			console.log('gameStartAllow');
 			return;
 		}
 		socket.emit('youAreNotOwner');
@@ -219,4 +222,12 @@ function transformChat2Int(chat) {
 		sum += num - 64;
 	}
 	return sum;
+}
+
+function createRandomInt() {
+	const min = 30;
+	const max = 500;
+	if (Math.random() > 0.5) {
+		return Math.floor(Math.random)
+	}
 }
