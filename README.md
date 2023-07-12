@@ -23,7 +23,7 @@ Project Title: WORDART
 
 Team Member: HYU 22 junseo Kim, KAIST 22 mingyu Kim
 
-Detail: This app is chatting based game. English word you chat is translated to number. 
+Detail: This app is chatting based game. English word which you chat is translated to number. 
 
 By adding all alpabets by A is 1, B is 2, ... , and Z is 26.
 
