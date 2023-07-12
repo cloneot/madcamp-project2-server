@@ -88,20 +88,28 @@ io.on('connection', function (socket) {
 	//참가자가 대기화면 나감
 	socket.on('playerLeaveWaitingRoom', function (data) {
 		console.log('playerLeaveWaitingRoom');
-		const room = rooms.find(r => r.id == data.room.id);
+		var idx = -1;
+		for (let i = 0; i < rooms.length; ++i) {
+			if (rooms[i].id == data.room.id) {
+				idx = i;
+				break;
+			}
+		}
+
+		// var room = rooms.find(r => r.id == data.room.id);
 		if (data.mePlayer == 2) {
-			room.player2 = '';
+			rooms[idx].player2 = '';
 		}
 		else if (data.mePlayer == 3) {
-			room.player3 = '';
+			rooms[idx].player3 = '';
 		}
 		else if (data.mePlayer == 4) {
-			room.player4 = '';
+			rooms[idx].player4 = '';
 		}
-		room.space++;
-		socket.leave(data.room.id);
+		rooms[idx].space++;
 		//roomRefresh(room);
-		io.to(data.room.id).emit('playerLeaveWaitingRoomFromServer', room);
+		socket.leave(data.room.id);
+		io.to(data.room.id).emit('playerLeaveWaitingRoomFromServer', rooms[idx]);
 		console.log('playerLeaveWaitingRoomFromServer');
 	});
 
@@ -132,33 +140,40 @@ io.on('connection', function (socket) {
 		console.log('on joinRoom');
 		console.log(rooms);
 		//roomId가 존재하는지 확인
-		const room = rooms.find(r => r.id == data.roomId);
-		if (!room) {
+		var idx = -1;
+		for (let i = 0; i < rooms.length; ++i) {
+			if (rooms[i].id == data.roomId) {
+				idx = i;
+				break;
+			}
+		}
+		if (!rooms[idx]) {
 			socket.emit('wrongRoomId', '방이 존재하지 않습니다.');
 			console.log("wrongRoomId");
 			return;
 		}
-		if (room.space == 0) {
+		if (rooms[idx].space == 0) {
 			socket.emit('noRoomSpace', '방이 다 찼습니다.');
 			console.log("noRoomSpace");
 			return;
 		}
-		if (room.space == 3) {
-			room.player2 = data.nickName;
+
+		if (!rooms[idx].player2) {
+			rooms[idx].player2 = data.nickName;
 		}
-		if (room.space == 2) {
-			room.player3 = data.nickName;
+		else if (!rooms[idx].player3) {
+			rooms[idx].player3 = data.nickName;
 		}
-		if (room.space == 1) {
-			room.player4 = data.nickName;
+		else if (!rooms[idx].player4) {
+			rooms[idx].player4 = data.nickName;
 		}
-		room.space = room.space - 1;
+		rooms[idx].space = rooms[idx].space - 1;
 		socket.join(data.roomId);
-		socket.broadcast.to(room.id).emit("newPlayer", data.nickName);
+		socket.broadcast.to(rooms[idx].id).emit("newPlayer", data.nickName);
 
-		// console.log(`join ${room.id}`);
+		// console.log(`join ${rooms[idx].id}`);
 
-		socket.emit("joinThisRoom", room);
+		socket.emit("joinThisRoom", rooms[idx]);
 		//방 전체에 참여자 알림
 		//클라이언트 소켓을 해당 방에 연결
 	});
@@ -328,20 +343,20 @@ function gameEnd(room, winnerNickName) {
 		player2 = room.player2;
 		player3 = room.player3;
 		player4 = room.player4;
-		if(!owner)	owner = null;
-		if(!player2)	player2 = null;
-		if(!player3)	player3 = null;
-		if(!player4)	player4 = null;
+		if (!owner) owner = null;
+		if (!player2) player2 = null;
+		if (!player3) player3 = null;
+		if (!player4) player4 = null;
 
-		if(winnerNickName == owner)	winner_index = 0;
-		else if(winnerNickName == player2)	winner_index = 1;
-		else if(winnerNickName == player3)	winner_index = 2;
-		else if(winnerNickName == player4)	winner_index = 3;
+		if (winnerNickName == owner) winner_index = 0;
+		else if (winnerNickName == player2) winner_index = 1;
+		else if (winnerNickName == player3) winner_index = 2;
+		else if (winnerNickName == player4) winner_index = 3;
 		else {
 			console.log(`not winner error 0: ${owner}, 1: ${player2}, 2: ${player3}, 3: ${player3}, winner: ${winnerNickName}`);
 			winner_index = -1;
 		}
-	} catch(err) {
+	} catch (err) {
 		console.log(`${room.toString()}`);
 		throw err;
 	}
@@ -351,11 +366,11 @@ function gameEnd(room, winnerNickName) {
 		connection.query('INSERT INTO histories (owner, player2, player3, player4, winner_index) VALUES (?, ?, ?, ?, ?)',
 			[owner, player2, player3, player4, winner_index],
 			(err, results, fields) => {
-				if(err)	throw err;
+				if (err) throw err;
 				console.log('history insert success');
 			}
 		);
-	} catch(err) {
+	} catch (err) {
 		throw err;
 	}
 }
