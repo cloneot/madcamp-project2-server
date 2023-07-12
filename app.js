@@ -219,12 +219,21 @@ io.on('connection', function (socket) {
 	//클라이언트가 게임 시작 요청
 	socket.on('gameStart', (data) => {
 		console.log('gameStart');
-		const room = rooms.find(r => r.id == data.roomId);
-		if (room.owner == data.nickName) {
+		var idx = -1;
+		for (let i = 0; i < rooms.length; ++i) {
+			if (rooms[i].id == data.roomId) {
+				idx = i;
+				break;
+			}
+		}
+		if (rooms[idx].owner == data.nickName) {
+			rooms[idx].isStart = 1;
 			socket.emit("timerStart");
 			console.log('timerStart');
 			io.to(room.id).emit('gameStartAllow');
 			console.log('gameStartAllow');
+			socket.emit('getRoomListSuccess', rooms);
+			console.emit('getRoomListSuccess');
 
 			// socket.broadcast.emit('getRoomListSuccess', rooms);	// 시작한 방은 목록에서 삭제
 			return;
@@ -315,7 +324,6 @@ function roomRefresh(room) {
 }
 
 function createRandomInt() {
-	return transformChat2Int('apple');
 	var min = 30;
 	var max = 500;
 	var a = Math.random();
