@@ -213,6 +213,7 @@ io.on('connection', function (socket) {
 		console.log('timeOverFromServer',);
 
 		const room = rooms.find(r => r.id == data.id);
+		console.log(`winnerData: ${winnerData.toString()}`);
 		gameEnd(room, winnerData.nickName);
 	});
 
@@ -230,10 +231,10 @@ io.on('connection', function (socket) {
 			rooms[idx].isStart = 1;
 			socket.emit("timerStart");
 			console.log('timerStart');
-			io.to(room.id).emit('gameStartAllow');
+			io.to(rooms[idx].id).emit('gameStartAllow');
 			console.log('gameStartAllow');
-			socket.emit('getRoomListSuccess', rooms);
-			console.emit('getRoomListSuccess');
+			socket.broadcast.emit('getRoomListSuccess', rooms);
+			console.log('getRoomListSuccess');
 
 			// socket.broadcast.emit('getRoomListSuccess', rooms);	// 시작한 방은 목록에서 삭제
 			return;
