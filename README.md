@@ -17,3 +17,14 @@ npm start
 
 - controllers: 애플리케이션의 비즈니스 로직을 처리하는 컨트롤러 파일들을 저장하는 폴더입니다. 라우팅 로직에서 요청을 처리하고 데이터베이스와 상호작용하여 필요한 작업을 수행하는 함수들을 작성합니다.
 - models: 데이터베이스 모델과 관련된 파일들을 저장하는 폴더입니다. 데이터베이스 스키마, 쿼리 메서드 등을 작성하여 데이터를 조작하는 로직을 이곳에 작성합니다.
+
+# About Project
+Project Title: WORDART
+Team Member: HYU 22 junseo Kim, KAIST 22 mingyu Kim
+Detail: This app is chatting based game. English word you chat is translated to number. 
+By adding all alpabets by A is 1, B is 2, ... , and Z is 26.
+Ex) apple -> 1+16+16+12+5 = 50
+If you start game server tell target number and your goal is to find English word whose translated number is as close as target number.
+Score is abs(translated number - target numeber). Smaller score is good.
+Game end when someone find matching word or timeover.
+When timeover, user who has the smallest score win.
