@@ -1,6 +1,22 @@
 const router = require('express').Router();
 const connection = require('../db');
 
+router.get('/users/:username/histories', (req, res) => {
+	console.log('get /users/:username/histories get request');
+	let username = req.params.username;
+	console.log(username);
+	// console.log(req);
+	connection.query(
+		'SELECT * FROM histories WHERE owner=? or player2=? or player3=? or player4=?',
+		[username, username, username, username],
+		function(error, results, fields) {
+			console.log(results);
+			if(error)	throw error;
+			return res.json(results);
+		}
+	);
+});
+
 router.put('/users/:userid/game_end', (req, res) => {
 	console.log('put /users/:userid/game_end');
 	try {
