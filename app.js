@@ -168,8 +168,8 @@ io.on('connection', function (socket) {
 			rooms[idx].player4 = data.nickName;
 		}
 		rooms[idx].space = rooms[idx].space - 1;
+		io.to(rooms[idx].id).emit("newPlayer", data.nickName);
 		socket.join(data.roomId);
-		socket.broadcast.to(rooms[idx].id).emit("newPlayer", data.nickName);
 
 		// console.log(`join ${rooms[idx].id}`);
 
@@ -315,6 +315,7 @@ function roomRefresh(room) {
 }
 
 function createRandomInt() {
+	return transformChat2Int('apple');
 	var min = 30;
 	var max = 500;
 	var a = Math.random();
