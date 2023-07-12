@@ -42,9 +42,7 @@ app.get('/', (req, res) => {
 });
 
 //방 목록
-var rooms = [
-	{ id: '1', name: 'Room 1', owner: 'mingyu', target: 1, space: 3, player2: '', player3: '', player4: '' }
-];
+var rooms = [];
 var roomTargetMap = new Map();
 var roomCloestMap = new Map();
 
@@ -70,7 +68,6 @@ io.on('connection', function (socket) {
 				//정답 맞춤
 				io.to(room.id).emit('someoneWin', data.myNickName);
 				console.log("someoneWin");
-				roomCloestMap.delete(room.id);
 				return;
 			}
 			const difference = Math.abs(roomTargetMap.get(room.id) - transformChat2Int(data.chat));
@@ -87,15 +84,52 @@ io.on('connection', function (socket) {
 		});
 	})
 
-	//클라이언트가 방 나감
+	//참가자가 대기화면 나감
+	socket.on('playerLeaveWaitingRoom', function (data) {
+		console.log('playerLeaveWaitingRoom');
+		const room = rooms.find(r => r.id == data.room.id);
+		if (data.mePlayer == 2) {
+			room.player2 = '';
+		}
+		else if (data.mePlayer == 3) {
+			room.player3 = '';
+		}
+		else if (data.mePlayer == 4) {
+			room.player4 = '';
+		}
+		room.space++;
+		socket.leave(data.room.id);
+		//roomRefresh(room);
+		io.to(data.room.id).emit('playerLeaveWaitingRoomFromServer', room);
+		console.log('playerLeaveWaitingRoomFromServer');
+	});
+
+	//방장이 대기화면 나감
+	socket.on('ownerLeaveWaitingRoom', function (data) {
+		console.log('on ownerLeaveWaitingRoom');
+		console.log(data);
+		roomCloestMap.delete(data.id);
+		roomTargetMap.delete(data.id);
+		rooms = rooms.filter(r => r.id != data.id);
+		socket.leave(data.id);
+		io.to(data.id).emit('waitingRoomExplode');
+		console.log('emit waitingRoomExplode');
+		socket.broadcast.emit('getRoomListSuccess', rooms);
+	});
+
+	//방 폭파
 	socket.on('leaveRoom', function (room) {
 		socket.leave(room.id);
+		console.log('leaveRoom');
+		roomCloestMap.delete(room.id);
+		roomTargetMap.delete(room.id);
+		rooms = rooms.filter(r => r.id != room.id);
 	});
 
 	//클라이언트가 roomdId로 참여 요청을
 	socket.on('joinRoom', function (data) {
-
-		console.log('emit joinRoom');
+		console.log('on joinRoom');
+		console.log(rooms);
 		//roomId가 존재하는지 확인
 		const room = rooms.find(r => r.id == data.roomId);
 		if (!room) {
@@ -118,10 +152,7 @@ io.on('connection', function (socket) {
 			room.player4 = data.nickName;
 		}
 		room.space = room.space - 1;
-
-		console.log(socket.rooms);
 		socket.join(data.roomId);
-		console.log(socket.rooms);
 		socket.broadcast.to(room.id).emit("newPlayer", data.nickName);
 
 		// console.log(`join ${room.id}`);
@@ -134,7 +165,8 @@ io.on('connection', function (socket) {
 	//클라이언트가 새로운 방 생성 요청
 	socket.on('createRoom', function (data) {
 		var id = Date.now().toString();
-		const target = createRandomInt();
+		var target = createRandomInt();
+		console.log(target);
 		roomTargetMap.set(id, target);
 		roomCloestMap.set(id, { 'nickName': data.nickName, 'score': 1000 });
 		console.log('on createRoom');
@@ -147,6 +179,7 @@ io.on('connection', function (socket) {
 			player2: '',
 			player3: '',
 			player4: '',
+			isStart: 0,
 		};
 		rooms.push(newRoom);
 		socket.join(newRoom.id);
@@ -224,10 +257,58 @@ function transformChat2Int(chat) {
 	return sum;
 }
 
+function roomRefresh(room) {
+	if (room.space == 1) {
+		return room;
+	} else if (room.space == 2) {
+		if (room.player2 == '') {
+			if (room.player3 == '') {
+				room.player2 = room.player4;
+				room.player4 = '';
+				return room;
+			} else {
+				room.player2 = room.player3;
+				room.player3 = '';
+				return room;
+			}
+		} else {
+			return room;
+		}
+	} else if (room.space == 3) {
+		if (room.player2 == '') {
+			room.player2 = room.player3;
+			room.player3 = room.player4;
+			room.player4 = '';
+			return room;
+		} else if (room.player3 == '') {
+			room.player3 = room.player4;
+			room.player4 = '';
+			return room;
+		} else {
+			return room;
+		}
+	} else {
+		return room;
+	}
+}
+
 function createRandomInt() {
-	const min = 30;
-	const max = 500;
-	if (Math.random() > 0.5) {
-		return Math.floor(Math.random)
+	var min = 30;
+	var max = 500;
+	var a = Math.random();
+	if (a > 0.4) {
+		min = 30;
+		max = 100;
+		return Math.floor(Math.random() * (max - min + 1) + min);
+	}
+	if (a > 0.1) {
+		min = 101;
+		max = 300;
+		return Math.floor(Math.random() * (max - min + 1) + min);
+	}
+	else {
+		min = 300;
+		max = 500;
+		return Math.floor(Math.random() * (max - min + 1) + min);
 	}
 }
