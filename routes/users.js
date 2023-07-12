@@ -1,6 +1,22 @@
 const router = require('express').Router();
 const connection = require('../db');
 
+router.get('/users/:username/histories', (req, res) => {
+	console.log('get /users/:username/histories get request');
+	let username = req.params.username;
+	console.log(username);
+	// console.log(req);
+	connection.query(
+		'SELECT * FROM histories WHERE owner=? or player2=? or player3=? or player4=?',
+		[username, username, username, username],
+		function(error, results, fields) {
+			console.log(results);
+			if(error)	throw error;
+			return res.json(results);
+		}
+	);
+});
+
 router.put('/users/:userid/game_end', (req, res) => {
 	console.log('put /users/:userid/game_end');
 	try {
@@ -9,6 +25,21 @@ router.put('/users/:userid/game_end', (req, res) => {
 		connection.query('UPDATE users SET wins=wins+?, total_games=total_games+1 WHERE id=?', [is_win ? 1 : 0, userid], (err, results, fields) => {
 			if(err)	throw err;
 			console.log('update wins, total_games');
+			return res.json([{'msg' : 'success'}]);
+		});
+	} catch(e) {
+		console.log(`error: ${e}`);
+	}
+});
+
+router.put('/users/:userid/description', (req, res) => {
+	console.log('put /users/:userid/game_end');
+	try {
+		var userid = Number(req.params.userid);
+		var description = String(req.body.description);
+		connection.query('UPDATE users SET description=? WHERE id=?', [description, userid], (err, results, fields) => {
+			if(err)	throw err;
+			console.log('[REQUEST] update user description');
 			return res.json([{'msg' : 'success'}]);
 		});
 	} catch(e) {

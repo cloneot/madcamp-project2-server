@@ -12,8 +12,8 @@ const io = new Server(httpServer, {
 const path = require('path')
 const session = require('express-session')
 const cors = require('cors');
-const AuthRouter = require('./routes/auth')
-const UserRouter = require('./routes/users')
+const UserRouter = require('./routes/users');
+const connection = require("./db");
 const port = 80
 
 app.set('view engine', 'ejs')
@@ -29,7 +29,6 @@ app.use(session({
 	resave: true,
 	saveUninitialized: true
 }))
-app.use(AuthRouter);
 app.use(UserRouter);
 
 app.get('/', (req, res) => {
@@ -66,11 +65,13 @@ io.on('connection', function (socket) {
 			}
 			if (roomTargetMap.get(room.id) == transformChat2Int(data.chat)) {
 				//정답 맞춤
+				gameEnd(room, data.myNickName);
 				io.to(room.id).emit('someoneWin', data.myNickName);
 				console.log("someoneWin");
 				return;
 			}
 			const difference = Math.abs(roomTargetMap.get(room.id) - transformChat2Int(data.chat));
+			// console.log(`enterChat room.id: ${room.id} data.chat: ${data.chat} difference: ${difference}`)
 			if (roomCloestMap.get(room.id).score > difference) {
 				roomCloestMap.set(room.id, { 'nickName': data.myNickName, 'score': difference });
 			}
@@ -168,6 +169,7 @@ io.on('connection', function (socket) {
 		var target = createRandomInt();
 		console.log(target);
 		roomTargetMap.set(id, target);
+		console.log(`createRoom setting roomTargetMap target: ${target}, id: ${id}`);
 		roomCloestMap.set(id, { 'nickName': data.nickName, 'score': 1000 });
 		console.log('on createRoom');
 		const newRoom = {
@@ -194,6 +196,9 @@ io.on('connection', function (socket) {
 		const winnerData = roomCloestMap.get(data.id);
 		io.to(data.id).emit('timeOverFromServer', winnerData);
 		console.log('timeOverFromServer',);
+
+		const room = rooms.find(r => r.id == data.id);
+		gameEnd(room, winnerData.nickName);
 	});
 
 	//클라이언트가 게임 시작 요청
@@ -205,6 +210,8 @@ io.on('connection', function (socket) {
 			console.log('timerStart');
 			io.to(room.id).emit('gameStartAllow');
 			console.log('gameStartAllow');
+
+			// socket.broadcast.emit('getRoomListSuccess', rooms);	// 시작한 방은 목록에서 삭제
 			return;
 		}
 		socket.emit('youAreNotOwner');
@@ -310,5 +317,45 @@ function createRandomInt() {
 		min = 300;
 		max = 500;
 		return Math.floor(Math.random() * (max - min + 1) + min);
+	}
+}
+
+function gameEnd(room, winnerNickName) {
+	console.log(`game end room: ${room.toString()} winnerNickName: ${winnerNickName}`);
+	let owner, player2, player3, player4, winner_index;
+	try {
+		owner = room.owner;
+		player2 = room.player2;
+		player3 = room.player3;
+		player4 = room.player4;
+		if(!owner)	owner = null;
+		if(!player2)	player2 = null;
+		if(!player3)	player3 = null;
+		if(!player4)	player4 = null;
+
+		if(winnerNickName == owner)	winner_index = 0;
+		else if(winnerNickName == player2)	winner_index = 1;
+		else if(winnerNickName == player3)	winner_index = 2;
+		else if(winnerNickName == player4)	winner_index = 3;
+		else {
+			console.log(`not winner error 0: ${owner}, 1: ${player2}, 2: ${player3}, 3: ${player3}, winner: ${winnerNickName}`);
+			winner_index = -1;
+		}
+	} catch(err) {
+		console.log(`${room.toString()}`);
+		throw err;
+	}
+	console.log(`0: ${owner}, 1: ${player2}, 2: ${player3}, 3: ${player3}, winner: ${winnerNickName}`);
+
+	try {
+		connection.query('INSERT INTO histories (owner, player2, player3, player4, winner_index) VALUES (?, ?, ?, ?, ?)',
+			[owner, player2, player3, player4, winner_index],
+			(err, results, fields) => {
+				if(err)	throw err;
+				console.log('history insert success');
+			}
+		);
+	} catch(err) {
+		throw err;
 	}
 }
