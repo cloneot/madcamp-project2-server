@@ -12,7 +12,6 @@ const io = new Server(httpServer, {
 const path = require('path')
 const session = require('express-session')
 const cors = require('cors');
-const AuthRouter = require('./routes/auth')
 const UserRouter = require('./routes/users')
 const port = 80
 
@@ -29,7 +28,6 @@ app.use(session({
 	resave: true,
 	saveUninitialized: true
 }))
-app.use(AuthRouter);
 app.use(UserRouter);
 
 app.get('/', (req, res) => {

@@ -16,6 +16,21 @@ router.put('/users/:userid/game_end', (req, res) => {
 	}
 });
 
+router.put('/users/:userid/description', (req, res) => {
+	console.log('put /users/:userid/game_end');
+	try {
+		var userid = Number(req.params.userid);
+		var description = String(req.body.description);
+		connection.query('UPDATE users SET description=? WHERE id=?', [description, userid], (err, results, fields) => {
+			if(err)	throw err;
+			console.log('[REQUEST] update user description');
+			return res.json([{'msg' : 'success'}]);
+		});
+	} catch(e) {
+		console.log(`error: ${e}`);
+	}
+});
+
 router.get('/users/:userid', (req, res) => {
 		console.log('get /users/:userid get request');
 		let userid = req.params.userid;
